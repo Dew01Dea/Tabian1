@@ -1,6 +1,8 @@
 const express = require('express');
 const app = express();
 
+app.use(express.json());
+
 app.get('/hello',(req, res) => {
     res.json({message: 'สวัสดี Back-End!'});
 });
@@ -39,6 +41,70 @@ app.get('/ideas', (req, res) => {
     res.json(ideas);
 });
 
+let repairs = [
+  { id: 1, name: 'นายธราเทพ สีทอง', major: 'IT', level: 'ปวส.1' },
+  { id: 2, name: 'นางสาวสุภาพร ทองคำ', major: 'IT', level: 'ปวส.1' },
+];
+let nextId = 3;
+
+// R: ดู level ทั้งหมด (รองรับ ?status=pending)
+app.get('/students', (req, res) => {
+  const { level } = req.query;
+  if (level) {
+    return res.json(repairs.filter((s) => s.level === level));
+  }
+  res.json(repairs);
+});
+
+// R: ดู 1 รายการ
+app.get('/students/:id', (req, res) => {
+  const id = Number(req.params.id);
+  const students = repairs.find((s) => s.id === id);
+  if (!students) {
+    return res.status(404).json({ message: 'ไม่พบข้อมูลนักศึกษาตนนี้' });
+  }
+  res.json(students);
+});
+
+// C: เพิ่ม
+app.post('/students', (req, res) => {
+  const { name, major ,level } = req.body;
+  if (!name || !major || !level) {
+    return res.status(400).json({ message: 'ต้องส่ง name, major และ level' });
+  }
+  const student = { id: nextId++, name, major, level };
+  repairs.push(student);
+  res.status(201).json(student);
+});
+
+// U: แก้ไข
+app.put('/students/:id', (req, res) => {
+  const id = Number(req.params.id);
+  const students = repairs.find((s) => s.id === id);
+  if (!students) {
+    return res.status(404).json({ message: 'ไม่พบข้อมูลนักศึกษาตนนี้' });
+  }
+  const allowed = ['ปวส.1', 'ปวส.2', 'done'];
+  if (req.body.level && !allowed.includes(req.body.level)) {
+    return res.status(400).json({ message: 'ระดับชั้นต้องเป็น ปวส.1, ปวส.2 เท่านั้น' });
+  }
+  students.name = req.body.name ?? students.name;
+  students.major = req.body.major ?? students.major;
+  students.level = req.body.level ?? students.level;
+  res.json(students);
+});
+
+// D: ลบ
+app.delete('/students/:id', (req, res) => {
+  const id = Number(req.params.id);
+  const index = repairs.findIndex((s) => s.id === id);
+  if (index === -1) {
+    return res.status(404).json({ message: 'ไม่พบรายการแจ้งซ่อม' });
+  }
+  repairs.splice(index, 1);
+  res.status(204).send();
+});
+ 
 app.get('/members/:id', (req, res) => {
     const id = Number(req.params.id);                  // /members/2 ได้ id = 2
     const member = members.find((m) => m.id === id);   // หาสมาชิกที่ id ตรงกัน
@@ -46,4 +112,9 @@ app.get('/members/:id', (req, res) => {
         return res.status(404).json({ message: 'ไม่พบ ID สมาชิกที่ระบุ' });
     }
     res.json(member);
+});
+
+// ไม่ตรงกับ route ใดเลย
+app.use((req, res) => {
+  res.status(404).json({ message: `ไม่มี ${req.method} ${req.path} ในระบบ` });
 });
