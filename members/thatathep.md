@@ -1,4 +1,4 @@
-Name : Durongkon
-Role : Developer A, API และ โค้ด
-Tel : 0948545550
-Email : 69319010012@tatc.ac.th
+Name : Tharathep
+Role : Developer B, ฐานข้อมูล
+Tel : 0970059882
+Email : 69319010014@tatc.ac.th
